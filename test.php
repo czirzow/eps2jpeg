@@ -1,12 +1,14 @@
 <?php
 
 class Respond {
+	const BAD       = -2;
 	const UNKNOWN   = -1;
 	const PARAM     =  1;
 	const INIT      =  2;
 	const CONVERT   =  3;
 
 	private static $response_codes = array(
+		-2 => array('status' => 400, 'message' => 'Bad Upload'),
 		-1 => array('status' => 400, 'message' => 'Unknown error occured'),
 		 1 => array('status' => 400, 'message' => 'Invalid Parameter'),
 		 2 => array('status' => 400, 'message' => 'Problem with initializing parameters'),
@@ -37,9 +39,19 @@ class Respond {
 require_once('Eps2Jpeg.php');
 
 
-$eps_width = '823';
-$eps_height = '648';
-$eps_file = 'admin_1326964.eps';
+$upload = $_FILES['eps_file'];
+if(! $upload) {
+	Respond::withError("An upload of an eps file is required.", Respond::PARAM);
+}
+
+if(! is_uploaded_file($upload['tmp_name'])) {
+	Respond::withError("Not a valid upload", Respond::BAD);
+}
+$eps_file = $upload['tmp_name'];
+if($_REQUEST['auto_name']) {
+	$eps_save_base = $upload['name'];
+}
+
 
 if($_REQUEST['eps_width'] || $_REQUEST['eps_height']) {
 	$eps_width = (int)$_REQUEST['eps_width'];
@@ -70,7 +82,12 @@ if(! $file) {
 }
 //echo $file; exit;
 
-//header('Content-Disposition: attachment; filename="results.jpg";');
+if($eps_save_base) {
+	$p = pathinfo($eps_save_base);
+	$save_name = preg_replace('/"/', '\\"', $p['filename'] . '.jpg');
+	header('Content-Disposition: attachment; filename="'.$save_name.'"";');
+}
+
 header('Content-Type: image/jpeg');
 //header('Content-Type: application/octet-stream');
 //header('Content-Transfer-Encoding: binary');

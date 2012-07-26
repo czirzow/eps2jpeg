@@ -11,19 +11,28 @@
 		<tr>
 			<td>Eps Height</td>
 			<td><input name="eps_height"></td>
-			<td>(optional)</td>
+			<td>(optional) if specificed width must be used as well</td>
 		</tr>
 		<tr>
 			<td>Eps Width</td>
 			<td><input name="eps_width"></td>
-			<td>(optional)</td>
+			<td>(optional) if specificed height must be used as well</td>
 		</tr>
 		<tr>
 			<td>Jpeg Size</td>
-			<td><input name="jpg_size" value="2000"></td>
+			<td><input name="jpg_size" value="1000"></td>
+			<td>The size of the jpeg you want</td>
+		</tr>
+		<tr>
+			<td>Auto Name File</td>
+			<td><input type="checkbox" name="jpg_size" value="1"></td>
+			<td>Will send Content-Dispostion header with filename you sent ending in .jpg</td>
 		</tr>
 		<tr>
 			<td><input type="submit"></td>
 			<td></td>
+		</tr>
 	</table>
 </form>
+
+
