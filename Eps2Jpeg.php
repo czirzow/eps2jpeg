@@ -49,18 +49,18 @@ class EpsToJpeg {
 		} else {
 
 			if($this->width > $this->height) {
-				$ratio = number_format($jpg_size/$this->width, 2);
-				$convert_ratio = $jpg_size;
+				$ratio = number_format($jpg_size/$this->width, 4);
+				$convert_ratio = '-resize ' . $jpg_size;
 			} else {
-				$ratio = number_format($jpg_size/$this->height, 2);
-				$convert_ratio = 'x' . $jpg_size;
+				$ratio = number_format($jpg_size/$this->height, 4);
+				$convert_ratio = '-resize x' . $jpg_size;
 			}
 		}
 
 		$pdf_out = tempnam('/tmp/', 'eps2pdf');
 		$pstill =  self::$pstill_cmd . " -M pagescale=$ratio,$ratio  -M defaultall -s -p -m XPDFA=RGB -o $pdf_out " . escapeshellarg($this->file);
 		
-		exec("$pstill 2>&1", $output, $return_var);
+		exec("$pstill", $output, $return_var);
 		if($return_var) {
 			unlink($pdf_out);
 			$this->error = "Could not prepare\n";
@@ -70,9 +70,10 @@ class EpsToJpeg {
 		//echo "$pstill\n"; var_dump($output);
 
 		$jpg_out = '/tmp/test_out.jpg';
-		$convert = self::$convert_cmd . " -resize $convert_ratio -antialias -quality 100   $pdf_out $jpg_out";
+		$convert = self::$convert_cmd . "  $convert_ratio -antialias -quality 100   $pdf_out $jpg_out";
+		$convert = self::$convert_cmd . "  -antialias -quality 100   $pdf_out $jpg_out";
 		$output = array();
-		exec("$convert 2>&1", $output, $return_var);
+		exec("$convert", $output, $return_var);
 		error_log($convert);
 		if($return_var) {
 			error_log(print_r($outout, 1));
