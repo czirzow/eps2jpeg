@@ -37,11 +37,23 @@ class Respond {
 }
 
 require_once('Eps2Jpeg.php');
+error_log("start");
 
 
 $upload = $_FILES['eps_file'];
 if(! is_uploaded_file($upload['tmp_name'])) {
-	Respond::withError("Not a valid upload", Respond::BAD);
+	if($_POST['eps_file']) {
+		error_log("we have post of eps...");
+		if(! $_REQUEST['data_in_post']) {
+			Respond::withError("please supply data_in_post.", Respond::PARAM);
+		} else {
+			//$eps_file = tempnam
+
+		}
+	} else {
+		error_log(print_r($_POST, 1));
+		Respond::withError("Not a valid upload", Respond::BAD);
+	}
 }
 $eps_file = $upload['tmp_name'];
 if($_REQUEST['auto_name']) {

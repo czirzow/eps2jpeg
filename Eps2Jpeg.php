@@ -31,12 +31,17 @@ class Eps2Jpeg {
 	private function setSize() {
 
 		$cmd = self::$identify_cmd . ' ' . escapeshellarg($this->file);
+		error_log($cmd);
 		exec("$cmd 2>&1", $output, $return_var);
 		if($return_var) {
+			error_log('return var not 0');
+			error_log(print_r($output, 1));
 			return false;
 		}
 		// 'admin_1326964.eps EPT 823x648 823x648+0+0 DirectClass 2mb'
+		error_log("check size for" . print_r($output, 1));
 		if(! preg_match('/ (\d+)x(\d+) /', $output[0], $matches)) {
+			error_log("no size match for" . print_r($output, 1));
 			return false;
 		}
 
