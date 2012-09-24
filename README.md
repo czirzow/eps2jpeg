@@ -1,4 +1,5 @@
-# Eps2Jpeg
+Eps2Jpeg
+========
 
 Convert Eps files to jpeg with php
 
@@ -10,9 +11,65 @@ Convert Eps files to jpeg with php
    * http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
  * xorg-x11-fonts-Type1.noarch 7.1-2.1.el5      installed
 
+
 Original source from: https://github.com/czirzow/eps2jpeg
 
-## License
+
+Input params for convert
+========================
+* *eps_file* - the multi-part file that is uploaded
+* *auto_name* - auto respond with the jpeg name
+* *eps_width* - a hint to the system about the width of the eps
+* *eps_height* - a hint to the system about the height of the eps
+* *jpeg_size* - the max size of the jpeg desired, aspect ratio will be kept
+
+**note:** *eps_width* and $eps_height are helpful so the convert script does not need to figure out the size.
+
+
+Response for convert.php
+========================
+
+HTTP status codes:
+-------------------
+* 200 - successfull jpg
+* 400 - an error
+
+When the http status code is a 200 (success), a jpeg will follow in the contents. If the form value *auto_name* was specificed the header with the following headers:
+
+    Content-Disposition: attachment; filenme="{$form_upload_basename}.jpg";
+
+
+if the http status code is a 400 json will be returned, with some information in this format:
+     HTTP/1.1 400 [error_code] error_reason
+     {
+        status: 400
+        code: error_code
+        error: error_reason
+        message: reason for this error
+     }
+
+Error Codes
+-----------
+     -2 - simply a bad upload (should not happen)
+     -1 - uknown error, it is the default error
+      1  - parameter passed issue
+      2  - there was a problem initializing the paramters
+      3  - there was a problem converting the file.
+
+
+Example Response:
+
+     HTTP/1.1 400 [1] Invalid Parameter
+     {
+        status: 400,
+        code: 1,
+        error: "Invalid Parameter",
+        message: "eps_width and eps_height must both be passed"
+     }
+
+
+License
+=======
 
 Copyright (C) 2012 by Shutterstock Images, LLC
 
