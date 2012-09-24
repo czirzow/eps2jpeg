@@ -10,6 +10,7 @@ Convert Eps files to jpeg with php
    * http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
  * xorg-x11-fonts-Type1.noarch 7.1-2.1.el5      installed
 
+Original source from: https://github.com/czirzow/eps2jpeg
 
 ## License
 
