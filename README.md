@@ -1,5 +1,4 @@
-Eps2Jpeg
-========
+## Eps2Jpeg
 
 Convert Eps files to jpeg with php
 
@@ -15,8 +14,7 @@ Convert Eps files to jpeg with php
 Original source from: https://github.com/czirzow/eps2jpeg
 
 
-Input params for convert
-========================
+### Input params for convert
 * *eps_file* - the multi-part file that is uploaded
 * *auto_name* - auto respond with the jpeg name
 * *eps_width* - a hint to the system about the width of the eps
@@ -26,11 +24,10 @@ Input params for convert
 **note:** *eps_width* and $eps_height are helpful so the convert script does not need to figure out the size.
 
 
-Response for convert.php
-========================
+### Response for convert.php
 
-HTTP status codes:
--------------------
+#### HTTP status codes:
+
 * 200 - successfull jpg
 * 400 - an error
 
@@ -48,8 +45,8 @@ if the http status code is a 400 json will be returned, with some information in
         message: reason for this error
      }
 
-Error Codes
------------
+#### Error Codes
+
      -2 - simply a bad upload (should not happen)
      -1 - uknown error, it is the default error
       1  - parameter passed issue
@@ -57,7 +54,7 @@ Error Codes
       3  - there was a problem converting the file.
 
 
-Example Response:
+#### Example Response:
 
      HTTP/1.1 400 [1] Invalid Parameter
      {
@@ -68,8 +65,7 @@ Example Response:
      }
 
 
-License
-=======
+## License
 
 Copyright (C) 2012 by Shutterstock Images, LLC
 
