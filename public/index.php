@@ -11,7 +11,7 @@ require __DIR__ . '/../vendor/slim/extras/Views/TwigView.php';
 $app->view('TwigView');
 
 $app->get('/', function() use ($app) {
-	$app->render('index.twig.html', array('title' => 'Hello World'));
+	$app->render('upload.html');
 	}
 );
 
