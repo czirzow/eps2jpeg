@@ -1,0 +1,2 @@
+runtime: php54
+run: exec php -S "${HTTP_HOST-0.0.0.0}:${HTTP_PORT-8000}" -c "${PROJECT_PATH}/php.ini" -t "${PROJECT_PATH}/public"
