@@ -2,13 +2,14 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$app = new Slim(array(
+
+$view = new \Slim\Extras\Views\Twig();
+
+	$app = new Slim\Slim(array(
 	'templates.path' => __DIR__ . '/../views',
+	'view' => $view,
 ));
 
-require __DIR__ . '/../vendor/slim/extras/Views/TwigView.php';
-
-$app->view('TwigView');
 
 $app->get('/', function() use ($app) {
 	$app->render('upload.html');
