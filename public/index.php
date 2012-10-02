@@ -18,7 +18,7 @@ $app->get('/', function() use ($app) {
 );
 
 
-$app->get('/convert/:type/', function($type)  use ($app) {
+$app->post('/convert/:type/', function($type)  use ($app) {
 
 
 	$request = Eps2Jpeg::request($type);

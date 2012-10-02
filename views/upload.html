@@ -1,12 +1,12 @@
 
 <form  
-	action="convert.php"
+	action="/convert/file/"
 	enctype="multipart/form-data" 
 	method="post">
 	<table>
 		<tr>
 			<td>Eps File</td>
-			<td><input type="file" name="eps_file"></td>
+			<td><input type="file" name="source"></td>
 		</tr>
 		<tr>
 			<td>Eps Height</td>
@@ -20,12 +20,12 @@
 		</tr>
 		<tr>
 			<td>Jpeg Size</td>
-			<td><input name="jpg_size" value="1000"></td>
+			<td><input name="jpg_max_size" value="1000"></td>
 			<td>The size of the jpeg you want</td>
 		</tr>
 		<tr>
 			<td>Auto Name File</td>
-			<td><input type="checkbox" name="auto_name" value="1"></td>
+			<td><input type="checkbox" name="auto_name" value="1" checked></td>
 			<td>Will send Content-Dispostion header with filename you sent ending in .jpg</td>
 		</tr>
 		<tr>
