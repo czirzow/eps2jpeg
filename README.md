@@ -49,9 +49,9 @@ Converting an raw post of content [not implemented]:
 
     http://hostname:8000/convert/post/
 
-Converting a file url [not implemented]:
+Converting a url [not implemented]:
 
-    http://hostname:8000/convert/file/url/
+    http://hostname:8000/convert/url/
 
 
 ### Input params for convert [cleanup]
