@@ -9,13 +9,13 @@ Convert Eps files to jpeg with php
  * pstill 
    * http://www.wizards.de/~frank/pstill.html
    * http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
-	 * cd ~/tmp/
-	 * wget http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
-	 * tar xzf pstill17814_linux_ia32.tar.gz 
-	 * cd pstill_dist
-	 * patch < [path_to_Eps2Jpeg]/patches/linkAllFonts.sh.patch
-	 * Follow INSTALL file for pstill (to through step 3)
-	 * sudo cp -R . /opt/pstill
+   * cd ~/tmp/
+   * wget http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
+   * tar xzf pstill17814_linux_ia32.tar.gz 
+   * cd pstill_dist
+   * patch < [path_to_Eps2Jpeg]/patches/linkAllFonts.sh.patch
+   * Follow INSTALL file for pstill (to through step 3)
+   * sudo cp -R . /opt/pstill
 
 
 Original source from: https://github.com/czirzow/eps2jpeg
@@ -25,7 +25,7 @@ Original source from: https://github.com/czirzow/eps2jpeg
 
 ### Start up things:
     rock build
-		rock start
+    rock start
 
 
 ### Testing install:
@@ -34,19 +34,35 @@ This will test things to ensure everything is setup properly to run things:
     http://hostname:8000/test-install/
 
 ### Testing upload form:
+
 A form to test uploads with:
 
     http://hostname:8000/
 
 ### Converting an eps
 
-*Input params for convert
+Converting an uploaded file:
 
-* *eps_file* - the multi-part file that is uploaded
-* *auto_name* - auto respond with the jpeg name
-* *eps_width* - a hint to the system about the width of the eps
-* *eps_height* - a hint to the system about the height of the eps
-* *jpeg_size* - the max size of the jpeg desired, aspect ratio will be kept
+    http://hostname:8000/convert/file/
+
+Converting an raw post of content [not implemented]:
+
+    http://hostname:8000/convert/post/
+
+Converting a file url [not implemented]:
+
+    http://hostname:8000/convert/file/url/
+
+
+### Input params for convert [cleanup]
+* *source* - depending on action: file: a multi-part file uploaded, post: a post var containg content,  url: the url to use
+* *save_as* - filename returned in the headers, defaults to the basename of the original input. (required for convert/post)
+* *max_jpeg_size* - the max size width or height of jpeg desired, aspect ratio will be kept
+
+[optional]
+* *target_format* - [default: jpeg] only jpeg supported.
+* *eps_width* - [default: calculated] a hint to the system about the width of the eps
+* *eps_height* - [default: calculated] a hint to the system about the height of the eps
 
 **note:** *eps_width* and $eps_height are helpful so the convert script does not need to figure out the size.
 
@@ -66,7 +82,6 @@ When the http status code is a 200 (success), a jpeg will follow in the contents
 if the http status code is a 400 json will be returned, with some information in this format:
      HTTP/1.1 400 [error_code] error_reason
      {
-        status: 400
         code: error_code
         error: error_reason
         message: reason for this error
