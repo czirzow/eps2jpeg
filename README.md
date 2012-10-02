@@ -3,12 +3,19 @@
 Convert Eps files to jpeg with php
 
 ## Required: 
- * php
- * ImageMagick
+ * rockplatform/php54 (php53 without rockplatform)
+ * ImageMagick (yum install ImageMagick)
+ * Type1 fonts (yum install xorg-x11-fonts-Type1)
  * pstill 
    * http://www.wizards.de/~frank/pstill.html
    * http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
- * xorg-x11-fonts-Type1.noarch 7.1-2.1.el5      installed
+	 * cd ~/tmp/
+	 * wget http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
+	 * tar xzf pstill17814_linux_ia32.tar.gz 
+	 * cd pstill_dist
+	 * patch < [path_to_Eps2Jpeg]/patches/linkAllFonts.sh.patch
+	 * Follow INSTALL file for pstill (to through step 3)
+	 * sudo cp -R . /opt/pstill
 
 
 Original source from: https://github.com/czirzow/eps2jpeg
