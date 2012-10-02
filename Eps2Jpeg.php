@@ -1,6 +1,73 @@
 <?php
 	
 
+class Eps2Jpeg {
+	const MAX_RATIO = 4.0;
+
+	public static $pstill_cmd = '/opt/pstill/pstill';
+	public static $convert_cmd = '/usr/bin/convert';
+	public static $identify_cmd = '/usr/bin/identify';
+	public static $tmp_dir = '/tmp/';
+
+	public static function request($type) {
+		return new Eps2JpegRequest($type);
+	}
+
+	public static function converter($request) {
+		return new Eps2JpegConverter($request);
+	}
+
+	public static function test() {
+
+		$out = array();
+
+		if(! is_dir("/usr/share/X11/fonts/Type1/")) {
+			$out['fail']['pstill'] = 'xorg-x11-fonts-Type1 not installed';
+		} else {
+
+			if(file_exists(Eps2Jpeg::$pstill_cmd)) {
+				$out['success']['pstill'] = 'installed';
+			} else {
+				$out['fail']['pstill'] = 'not-installed';
+			}
+		}
+
+		if(file_exists(Eps2Jpeg::$convert_cmd)) {
+			$out['success']['convert'] = 'installed';
+		} else {
+			$out['fail']['convert'] = 'not-installed';
+		}
+
+		if(file_exists(Eps2Jpeg::$identify_cmd)) {
+			$out['success']['identify'] = 'installed';
+		} else {
+			$out['fail']['identify'] = 'not-installed';
+		}
+
+		if(is_dir(Eps2Jpeg::$tmp_dir) ) {
+			if(is_writable(Eps2Jpeg::$tmp_dir)) {
+				$out['success']['tmp_dir'] = 'Ok';
+				$perms = fileperms(Eps2Jpeg::$tmp_dir);
+				if(! ($perms & 0x0200)) { 
+					$out['warn']['tmp_dir'] = "Should have bit t set";
+				}
+			} else {
+				$out['fail']['tmp_dir'] = 'Not writable';
+			}
+		} else {
+			$out['fail']['tmp_dir'] = 'Directory does not exists.';
+		}
+		if(! $out['fail'] || $out['warn']) {
+			$out['message'] = 'Have a good time converting things!';
+		}
+
+		return $out;
+	}
+
+	public function response() {}
+
+}
+
 class Eps2JpegResponse {
 	const BAD       = -2;
 	const UNKNOWN   = -1;
@@ -113,73 +180,6 @@ class Eps2JpegRequest {
 
 
 	}
-
-}
-
-class Eps2Jpeg {
-	const MAX_RATIO = 4.0;
-
-	public static $pstill_cmd = '/opt/pstill/pstill';
-	public static $convert_cmd = '/usr/bin/convert';
-	public static $identify_cmd = '/usr/bin/identify';
-	public static $tmp_dir = '/tmp/';
-
-	public static function request($type) {
-		return new Eps2JpegRequest($type);
-	}
-
-	public static function converter($request) {
-		return new Eps2JpegConverter($request);
-	}
-
-	public static function test() {
-
-		$out = array();
-
-		if(! is_dir("/usr/share/X11/fonts/Type1/")) {
-			$out['fail']['pstill'] = 'xorg-x11-fonts-Type1 not installed';
-		} else {
-
-			if(file_exists(Eps2Jpeg::$pstill_cmd)) {
-				$out['success']['pstill'] = 'installed';
-			} else {
-				$out['fail']['pstill'] = 'not-installed';
-			}
-		}
-
-		if(file_exists(Eps2Jpeg::$convert_cmd)) {
-			$out['success']['convert'] = 'installed';
-		} else {
-			$out['fail']['convert'] = 'not-installed';
-		}
-
-		if(file_exists(Eps2Jpeg::$identify_cmd)) {
-			$out['success']['identify'] = 'installed';
-		} else {
-			$out['fail']['identify'] = 'not-installed';
-		}
-
-		if(is_dir(Eps2Jpeg::$tmp_dir) ) {
-			if(is_writable(Eps2Jpeg::$tmp_dir)) {
-				$out['success']['tmp_dir'] = 'Ok';
-				$perms = fileperms(Eps2Jpeg::$tmp_dir);
-				if(! ($perms & 0x0200)) { 
-					$out['warn']['tmp_dir'] = "Should have bit t set";
-				}
-			} else {
-				$out['fail']['tmp_dir'] = 'Not writable';
-			}
-		} else {
-			$out['fail']['tmp_dir'] = 'Directory does not exists.';
-		}
-		if(! $out['fail'] || $out['warn']) {
-			$out['message'] = 'Have a good time converting things!';
-		}
-
-		return $out;
-	}
-
-	public function response() {}
 
 }
 
