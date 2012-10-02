@@ -21,7 +21,27 @@ Convert Eps files to jpeg with php
 Original source from: https://github.com/czirzow/eps2jpeg
 
 
-### Input params for convert
+## Eps2Jpeg Usage
+
+### Start up things:
+    rock build
+		rock start
+
+
+### Testing install:
+This will test things to ensure everything is setup properly to run things:
+
+    http://hostname:8000/test-install/
+
+### Testing upload form:
+A form to test uploads with:
+
+    http://hostname:8000/
+
+### Converting an eps
+
+*Input params for convert
+
 * *eps_file* - the multi-part file that is uploaded
 * *auto_name* - auto respond with the jpeg name
 * *eps_width* - a hint to the system about the width of the eps
