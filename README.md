@@ -6,9 +6,7 @@ Convert Eps files to jpeg with php
  * rockplatform/php54 (php53 without rockplatform)
  * ImageMagick (yum install ImageMagick)
  * Type1 fonts (yum install xorg-x11-fonts-Type1)
- * pstill
-   * http://www.wizards.de/~frank/pstill.html
-   * http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
+ * pstill (http://www.wizards.de/~frank/pstill.html)
    * cd ~/tmp/
    * wget http://www.wizards.de/~frank/pstill17814_linux_ia32.tar.gz
    * tar xzf pstill17814_linux_ia32.tar.gz
