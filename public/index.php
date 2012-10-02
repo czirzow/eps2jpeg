@@ -57,26 +57,26 @@ $app->get('/', function() use ($app) {
 $app->get('/convert/:type/', function($type)  use ($app) {
 
 
-	$input = new Eps2JpegRequest($type);
-	$rc =  $input->validate();
+	$request = Eps2Jpeg::request($type);
+	$rc =  $request->validate();
 	if($rc !== true) {
 		$app->response()->header('Content-Type', 'application/json');
 		echo json_encode($rc);
 		exit;
 	}
 
-	$eps = new Eps2Jpeg($input);
+	$converter =  Eps2Jpeg::converter($request);
 	
-	if(! $eps->init()) {
+	if(! $converter->init()) {
 		$app->response()->header('Content-Type', 'application/json');
-		echo json_encode(Eps2JpegResponse::error($eps->error, Eps2JpegResponse::INIT));
+		echo json_encode(Eps2JpegResponse::error($converter->error, Eps2JpegResponse::INIT));
 		exit;
 	}
 
-	$file = $eps->convert();
+	$file = $converter->convert();
 	if(! $file) {
 		$app->response()->header('Content-Type', 'application/json');
-		echo json_encode(Eps2JpegResponse::error($eps->error, Eps2JpegResponse::CONVERT));
+		echo json_encode(Eps2JpegResponse::error($converter->error, Eps2JpegResponse::CONVERT));
 		exit;
 	}
 
@@ -89,7 +89,7 @@ $app->get('/convert/:type/', function($type)  use ($app) {
 
 $app->get('/test-install/', function() use ($app) {
 
-	$rc = Eps2Jpeg::testInstall();
+	$rc = Eps2Jpeg::test();
 	$app->response()->header('Content-Type', 'application/json');
 	echo json_encode($rc);
 

@@ -39,13 +39,22 @@ class Eps2JpegRequest {
 	private $type = 'file';
 
 	private $file = array();
+	private $cleanup_files = array();
 
 	public function __construct($type) {
 		$this->type = $type;
 	}
 
+	public function __destruct() {
+		foreach($this->cleanup_files as $file) {
+			if(file_exists($file) ) {
+				unlink($file);
+			}
+		}
+	}
+
 	private function validateUploadFile() {
-		$upload = $_FILES['eps_file'];
+		$upload = $_FILES['source'];
 		if(! is_uploaded_file($upload['tmp_name'])) {
 			return Eps2JpegResponse::error("Not a valid upload", Eps2JpegResponse::BAD);
 		}
@@ -58,9 +67,31 @@ class Eps2JpegRequest {
 
 	public function validate() {
 
+		switch($this->type) {
+			case 'file':
+				$rc = $this->validateUploadFile();
+				break;
+			case 'url':
+			case 'post':
+				//todo: add support.
+			default:
+				return  Eps2JpegResponse::error("Upload Type Not supported", Eps2JpegResponse::BAD);
+				break;
+		}
 
-		if($_REQUEST['auto_name'] && $this->file['name']) {
-			$this->eps_save_base = $upload['name'];
+		if($rc !== true) {
+			return $rc;
+		}
+
+		if($_REQUEST['save_as'] ) {
+			$this->eps_save_base = $_REQUEST['save_as'];
+		} else {
+			if(! $this->file['name']) {
+				return  Eps2JpegResponse::error("save_as param is required.", Eps2JpegResponse::PARAM);
+			}
+			if($_REQUEST['auto_name']) {
+				$this->eps_save_base = $this->file['name'];
+			}
 		}
 
 		if($_REQUEST['eps_width'] || $_REQUEST['eps_height']) {
@@ -71,26 +102,14 @@ class Eps2JpegRequest {
 			}
 		}
 
-		if($_REQUEST['jpg_size']) {
-			$this->jpg_size = (int)$_REQUEST['jpg_size'];
+		if($_REQUEST['jpg_max_size']) {
+			$this->jpg_size = (int)$_REQUEST['jpg_max_size'];
 			if($this->jpg_size <= 100) {
-				Eps2JpegResponse::error("jpg_size must be larger than 100", Respond::PARAM);
+				return Eps2JpegResponse::error("jpg_size must be larger than 100", Respond::PARAM);
 			}
 		}
 
-		switch($this->type) {
-			case 'file':
-				$rc = $this->validateUploadFile();
-				break;
-			case 'url':
-				//todo: add support.
-			default:
-				return  Eps2JpegResponse::error("Upload Type Not supported", Eps2JpegResponse::BAD);
-				break;
-		}
-		if($rc !== true) {
-			return $rc;
-		}
+		return true;
 
 
 	}
@@ -100,59 +119,50 @@ class Eps2JpegRequest {
 class Eps2Jpeg {
 	const MAX_RATIO = 4.0;
 
-	private static $pstill_cmd = '/opt/pstill/pstill';
-	private static $convert_cmd = '/usr/bin/convert';
-	private static $identify_cmd = '/usr/bin/identify';
-	private static $tmp_dir = '/tmp/';
+	public static $pstill_cmd = '/opt/pstill/pstill';
+	public static $convert_cmd = '/usr/bin/convert';
+	public static $identify_cmd = '/usr/bin/identify';
+	public static $tmp_dir = '/tmp/';
 
-	private $cleanup_files = array();
-
-	private $ratio = array();
-	private $jpg_size = null;
-
-	private $input = null;
-
-
-	public function construct(Eps2JpegRequest $input) {
-		$this->input = $input;
+	public static function request($type) {
+		return new Eps2JpegRequest($type);
 	}
 
-	public function __destruct() {
-		foreach($this->cleanup_files as $file) {
-			if(file_exists($file) ) unlink($file);
-		}
+	public static function converter($request) {
+		return new Eps2JpegConverter($request);
 	}
 
-	public static function testInstall() {
+	public static function test() {
+
 		$out = array();
 
 		if(! is_dir("/usr/share/X11/fonts/Type1/")) {
 			$out['fail']['pstill'] = 'xorg-x11-fonts-Type1 not installed';
 		} else {
 
-			if(file_exists(self::$pstill_cmd)) {
+			if(file_exists(Eps2Jpeg::$pstill_cmd)) {
 				$out['success']['pstill'] = 'installed';
 			} else {
 				$out['fail']['pstill'] = 'not-installed';
 			}
 		}
 
-		if(file_exists(self::$convert_cmd)) {
+		if(file_exists(Eps2Jpeg::$convert_cmd)) {
 			$out['success']['convert'] = 'installed';
 		} else {
 			$out['fail']['convert'] = 'not-installed';
 		}
 
-		if(file_exists(self::$identify_cmd)) {
+		if(file_exists(Eps2Jpeg::$identify_cmd)) {
 			$out['success']['identify'] = 'installed';
 		} else {
 			$out['fail']['identify'] = 'not-installed';
 		}
 
-		if(is_dir(self::$tmp_dir) ) {
-			if(is_writable(self::$tmp_dir)) {
+		if(is_dir(Eps2Jpeg::$tmp_dir) ) {
+			if(is_writable(Eps2Jpeg::$tmp_dir)) {
 				$out['success']['tmp_dir'] = 'Ok';
-				$perms = fileperms(self::$tmp_dir);
+				$perms = fileperms(Eps2Jpeg::$tmp_dir);
 				if(! ($perms & 0x0200)) { 
 					$out['warn']['tmp_dir'] = "Should have bit t set";
 				}
@@ -169,9 +179,34 @@ class Eps2Jpeg {
 		return $out;
 	}
 
+	public function response() {}
+
+}
+
+class Eps2JpegConverter {
+
+	private $cleanup_files = array();
+
+	private $ratio = array();
+	private $jpg_size = null;
+	private $input = null;
+
+
+
+	public function construct(Eps2JpegRequest $input) {
+		$this->input = $input;
+	}
+
+	public function __destruct() {
+		foreach($this->cleanup_files as $file) {
+			if(file_exists($file) ) unlink($file);
+		}
+	}
+
+
 	private function setSize() {
 
-		$cmd = self::$identify_cmd . ' ' . escapeshellarg($this->file);
+		$cmd = Eps2Jpeg::$identify_cmd . ' ' . escapeshellarg($this->file);
 		error_log($cmd);
 		exec("$cmd 2>&1", $output, $return_var);
 		if($return_var) {
@@ -195,13 +230,13 @@ class Eps2Jpeg {
 
 	private function pstillCommand($input, $output) {
 		$ratio = $this->ratio['pstill'];
-		return self::$pstill_cmd . " -M pagescale=$ratio,$ratio  -M defaultall -s -p -m XPDFA=RGB -o $output " . escapeshellarg($input);
+		return Eps2Jpeg::$pstill_cmd . " -M pagescale=$ratio,$ratio  -M defaultall -s -p -m XPDFA=RGB -o $output " . escapeshellarg($input);
 	}
 
 	private function convertCommand($input, $output) {
 		$convert_ratio = $this->ratio['convert'];
-		$convert = self::$convert_cmd . "  $convert_ratio -antialias -quality 100 $input $output";
-		$convert = self::$convert_cmd . "  -antialias -quality 100 pdf:$input jpg:$output";
+		$convert = Eps2Jpeg::$convert_cmd . "  $convert_ratio -antialias -quality 100 $input $output";
+		$convert = Eps2Jpeg::$convert_cmd . "  -antialias -quality 100 pdf:$input jpg:$output";
 
 		return $convert;
 	}
@@ -243,7 +278,7 @@ class Eps2Jpeg {
 
 	public function convert() {
 
-		$pdf_out = tempnam(self::$tmp_dir, 'pdf');
+		$pdf_out = tempnam(Eps2Jpeg::$tmp_dir, 'pdf');
 		$this->cleanup_files[] = $pdf_out;
 
 		$pstill = $this->pstillCommand($this->file, $pdf_out);
@@ -257,7 +292,7 @@ class Eps2Jpeg {
 		error_log($pstill);
 		//echo "$pstill\n"; var_dump($output);
 
-		$jpg_out = tempnam(self::$tmp_dir, 'jpg');
+		$jpg_out = tempnam(Eps2Jpeg::$tmp_dir, 'jpg');
 		$this->cleanup_files[] = $jpg_out;
 		$convert = $this->convertCommand($pdf_out, $jpg_out);
 		error_log($convert);
