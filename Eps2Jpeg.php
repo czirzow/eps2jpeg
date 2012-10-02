@@ -105,7 +105,8 @@ class Eps2JpegResponse {
 class Eps2JpegRequest {
 	private $type = 'file';
 
-	private $file = array();
+	public $file = array();
+	public $jpg_size = 1000;
 	private $cleanup_files = array();
 
 	public function __construct($type) {
@@ -165,14 +166,14 @@ class Eps2JpegRequest {
 			$this->eps_width = (int)$_REQUEST['eps_width'];
 			$this->eps_height = (int)$_REQUEST['eps_height'];
 			if(! ($this->eps_width && $this->eps_height) ) {
-				return Eps2JpegResponse::error("eps_width and eps_height must both be passe", Respond::PARAM);
+				return Eps2JpegResponse::error("eps_width and eps_height must both be passe", Eps2JpegResponse::PARAM);
 			}
 		}
 
 		if($_REQUEST['jpg_max_size']) {
 			$this->jpg_size = (int)$_REQUEST['jpg_max_size'];
 			if($this->jpg_size <= 100) {
-				return Eps2JpegResponse::error("jpg_size must be larger than 100", Respond::PARAM);
+				return Eps2JpegResponse::error("jpg_size must be larger than 100", Eps2JpegResponse::PARAM);
 			}
 		}
 
@@ -193,7 +194,7 @@ class Eps2JpegConverter {
 
 
 
-	public function construct(Eps2JpegRequest $input) {
+	public function __construct(Eps2JpegRequest $input) {
 		$this->input = $input;
 	}
 
@@ -203,10 +204,9 @@ class Eps2JpegConverter {
 		}
 	}
 
-
 	private function setSize() {
 
-		$cmd = Eps2Jpeg::$identify_cmd . ' ' . escapeshellarg($this->file);
+		$cmd = Eps2Jpeg::$identify_cmd . ' ' . escapeshellarg($this->input->file['tmp_name']);
 		error_log($cmd);
 		exec("$cmd 2>&1", $output, $return_var);
 		if($return_var) {
@@ -215,7 +215,7 @@ class Eps2JpegConverter {
 			return false;
 		}
 		// 'admin_1326964.eps EPT 823x648 823x648+0+0 DirectClass 2mb'
-		error_log("check size for" . print_r($output, 1));
+		//error_log("check size for" . print_r($output, 1));
 		if(! preg_match('/ (\d+)x(\d+) /', $output[0], $matches)) {
 			error_log("no size match for" . print_r($output, 1));
 			return false;
@@ -242,10 +242,9 @@ class Eps2JpegConverter {
 	}
 
 	public function init() {
-		$this->jpg_size = $this->input->$jpg_size;
+		$jpg_size = $this->input->jpg_size;
 
 		if(! ($this->width || $this->height) ) {
-			//echo 'getting size..';
 
 			if(! $this->setSize() ) {
 				$this->error = 'Could not find size of eps';
@@ -281,7 +280,7 @@ class Eps2JpegConverter {
 		$pdf_out = tempnam(Eps2Jpeg::$tmp_dir, 'pdf');
 		$this->cleanup_files[] = $pdf_out;
 
-		$pstill = $this->pstillCommand($this->file, $pdf_out);
+		$pstill = $this->pstillCommand($this->input->file['tmp_name'], $pdf_out);
 		
 		exec("$pstill", $output, $return_var);
 		if($return_var) {
@@ -290,7 +289,6 @@ class Eps2JpegConverter {
 			return false;
 		}
 		error_log($pstill);
-		//echo "$pstill\n"; var_dump($output);
 
 		$jpg_out = tempnam(Eps2Jpeg::$tmp_dir, 'jpg');
 		$this->cleanup_files[] = $jpg_out;
