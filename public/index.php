@@ -11,8 +11,12 @@ $view = new \Slim\Extras\Views\Twig();
 	'view' => $view,
 ));
 
-
 $app->get('/', function() use ($app) {
+	$app->render('index.html', array('title' => 'Eps2Jpeg'));
+	}
+);
+
+$app->get('/form/', function() use ($app) {
 	$app->render('upload.html');
 	}
 );
@@ -44,8 +48,7 @@ $app->post('/convert/:type/', function($type)  use ($app) {
 		exit;
 	}
 
-	$app->response()->header('Content-Type', 'image/jpeg');
-	ob_end_flush(); // just in case.. this ensurse readfile doesn't load file to memory
+	header('Content-Type: image/jpeg');
 	readfile($file);
 	exit;
 

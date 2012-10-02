@@ -37,7 +37,7 @@ This will test things to ensure everything is setup properly to run things:
 
 A form to test uploads with:
 
-    http://hostname:8000/
+    http://hostname:8000/form/
 
 ### Converting an eps
 
