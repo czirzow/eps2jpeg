@@ -37,14 +37,14 @@ $app->post('/convert/:type/', function($type)  use ($app) {
 	
 	if(! $converter->init()) {
 		$app->response()->header('Content-Type', 'application/json');
-		echo json_encode(Eps2JpegResponse::error($converter->error, Eps2JpegResponse::INIT));
+		echo json_encode(Eps2Jpeg::response()->error($converter->error, Eps2Jpeg::INIT));
 		exit;
 	}
 
 	$file = $converter->convert();
 	if(! $file) {
 		$app->response()->header('Content-Type', 'application/json');
-		echo json_encode(Eps2JpegResponse::error($converter->error, Eps2JpegResponse::CONVERT));
+		echo json_encode(Eps2Jpeg::response()->error($converter->error, Eps2Jpeg::CONVERT));
 		exit;
 	}
 
