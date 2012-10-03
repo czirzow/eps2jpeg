@@ -17,7 +17,7 @@ $app->get('/', function() use ($app) {
 );
 
 $app->get('/form/', function() use ($app) {
-	$app->render('upload.html');
+	$app->render('form.html');
 	}
 );
 
