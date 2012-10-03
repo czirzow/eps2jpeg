@@ -133,13 +133,10 @@ class Eps2Jpeg {
 	}
 
 	/**
-	 * Return a singleton Eps2Jpeg_Cleaner object
+	 * Return a the current cleaner
 	 */
 	public static function clean() {
-		if(! self::$cleaner) {
-			self::$cleaner = new Eps2Jpeg_Cleaner();
-		}
-		return self::$cleaner;
+		return Eps2Jpeg_Cleaner::getInstance();
 	}
 
 }
@@ -149,6 +146,7 @@ class Eps2Jpeg {
  * Manager to clean up temp data
  */
 class Eps2Jpeg_Cleaner {
+	private static $instance = null;
 
 	/*
 	 * an array of files to clean up, assign any files that should be removed once the script is done running, see __destruct()
@@ -156,6 +154,22 @@ class Eps2Jpeg_Cleaner {
 	 */
 	private $cleanup_files = array();
 
+	/**
+	  * singleton.
+		*/
+	private function __construct() {}
+
+	/** 
+	  * singleton logic
+		*/
+	public static function getInstance() {
+		if(! self::$instance) {
+			self::$instance = new Eps2Jpeg_Cleaner();
+		}
+		return self::$instance;
+	}
+
+	
 	/**
 	 * If and when this object is created, these things are done after script execution.
 	 */
@@ -342,7 +356,7 @@ class Eps2JpegRequest_File extends Eps2JpegRequest {
 class Eps2JpegRequest_Url extends Eps2JpegRequest {
 
 	/**
-	 * A must... set this method as a 'file' type
+	 * A must... set this method as a 'url' type
 	 */
 	public function __construct() {
 		$this->method = 'url';
