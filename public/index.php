@@ -1,13 +1,14 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../Eps2Jpeg.php';
+define('BASEDIR', dirname(__DIR__));
+require_once(BASEDIR . '/vendor/autoload.php');
+require_once(BASEDIR . '/lib/Eps2Jpeg.php');
 
 
 $view = new \Slim\Extras\Views\Twig();
 
-	$app = new Slim\Slim(array(
-	'templates.path' => __DIR__ . '/../views',
+$app = new Slim\Slim(array(
+	'templates.path' => BASEDIR . '/views',
 	'view' => $view,
 ));
 

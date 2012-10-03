@@ -1,5 +1,8 @@
 <?php
 
+/* 
+ * base/factory class for converter.
+ */
 class Eps2Jpeg {
 	const MAX_RATIO = 4.0;
 
@@ -16,28 +19,54 @@ class Eps2Jpeg {
 
 	/**
 	 * keep only one instance of a response() call
+	 * @var object
 	 */
-	private static $response;
+	private static $response = null;
 
-	public static function request($type) {
-		switch($type) {
+	/**
+	 * keep only one instance of a cleaner() call
+	 * @var object
+	 */
+	private static $cleaner = null;
+
+	/**
+	 * Obtain a request object based on type of upload.
+	 * 
+	 * @param string $upload_type type of upload, file (multiform post), url
+	 *
+	 * return mixed and Eps2JpegRequest object on succes otherwise an Eps2Jpeg_Error->error()
+	 */
+	public static function request($upload_type) {
+		switch($upload_type) {
 			case 'file':
 				return new Eps2JpegRequest_File();
 			case 'url':
 				return new Eps2JpegRequest_File();
-
 			case 'post':
 			default:
+				echo 'asdf';
 				return Eps2Jpeg::response()->error('Upload method not valid', Eps2Jpeg::BAD_REQUEST);
 		}
 
 	}
 
-
+	/**
+	 * Obtain the converter object, currently only one exists.. hard coded Eps2Jpeg.
+	 */
 	public static function converter($request) {
 		return new Eps2JpegConverter($request);
 	}
 
+
+	/**
+	 * Run a test to see if code is able to be ran at all.
+	 *
+	 * return array array indexes:
+	 *                 'fail' - array of items that failed, 
+	 *                 'success' - array of successful tests, 
+	 *                 'warn' - an array of warnings.
+	 *                 'message' - only shown of 100 percent success
+	 */
 	public static function test() {
 
 		$out = array();
@@ -85,6 +114,9 @@ class Eps2Jpeg {
 		return $out;
 	}
 
+	/**
+	 * Return a singleton Eps2Jpeg_Response object
+	 */
 	public static function response() {
 		if(! self::$response) {
 			self::$response = new Eps2Jpeg_Response();
@@ -93,11 +125,65 @@ class Eps2Jpeg {
 		return self::$response;
 	}
 
+	/**
+	 * Return a singleton Eps2Jpeg_Cleaner object
+	 */
+	public static function clean() {
+		if(! self::$cleaner) {
+			self::$cleaner = new Eps2Jpeg_Cleaner();
+		}
+		return self::$cleaner;
+	}
+
 }
 
 
+/**
+ * Manager to clean up temp data
+ */
+class Eps2Jpeg_Cleaner {
+
+	/*
+	 * an array of files to clean up, assign any files that should be removed once the script is done running, see __destruct()
+	 * @var array
+	 */
+	private $cleanup_files = array();
+
+	/**
+	 * When things are done we do this 
+	 */
+	public function __destruct() {
+		foreach($this->cleanup_files as $file) {
+			if(file_exists($file) ) {
+				error_log("clean $file");
+				unlink($file);
+			}
+		}
+	}
+
+	/**
+	 * Add a file to be cleaned up
+	 *
+	 * @param string the filename to remove when this object is destroyed
+	 */
+	public function file($file) {
+		$this->cleanup_files[] = $file;
+	}
+
+}
+
+
+
+
+/**
+ * The Response object for Eps2Jpeg, some work needs to be done to be consistent.
+ */
 class Eps2Jpeg_Response {
 
+	/*
+	 * array of responses that can be returned, see also Eps2Jpeg for constants
+	 * @var array
+	 */
 	private static $response_codes = array(
 		Eps2Jpeg::BAD_REQUEST => array('status' => 400, 'message' => 'Bad Upload'),
 		Eps2Jpeg::UNKNOWN     => array('status' => 400, 'message' => 'Unknown error occured'),
@@ -106,8 +192,21 @@ class Eps2Jpeg_Response {
 		Eps2Jpeg::CONVERT     => array('status' => 400, 'message' => 'Problem Converting Image'),
 	);
 
+
+	/*
+	 * keep track of errors called
+	 * @var array
+	 */
 	private static $errors = array();
 
+	/*
+	 * report an error in a the proper format
+	 *
+	 * @param string $message the message to report
+	 * @param int $code  the type of error, see Eps2Jpeg constants
+	 *
+	 * @return array ensuring a consistent array in results.
+	 */
 	public static function error($message, $code=-1) {
 
 		if(! $response = self::$response_codes[$code]) {
@@ -123,30 +222,48 @@ class Eps2Jpeg_Response {
 
 		return $output;
 	}
+
 }
 
 
+
+
+/**
+ * The Base Eps2Jpeg Request validator 
+ */
 class Eps2JpegRequest {
 
-	private $type = null;
-
+	/**
+	 * current value for file to work on, child class must define these array values:
+	 *   'tmp_name' - the name of the temporary upload
+	 *   'name' - friendly name to save things as
+	 * @var array
+	 */
 	public $file = array();
+
+	/**
+	 * the max demensions of a jpeg for the result
+	 * @var int
+	 */
 	public $jpg_max_size = 1000;
-	private $cleanup_files = array();
 
 
-	public function __destruct() {
-		foreach($this->cleanup_files as $file) {
-			if(file_exists($file) ) {
-				unlink($file);
-			}
-		}
-	}
+	/*
+	 * A property the child class must set
+	 * @var string
+	 */
+	protected $type = null;
 
+
+	/** 
+	 * Validate input
+	 *
+	 * @return mixed true value on success, otherwise an array of errors.
+	 */
 	public function validate() {
 
 		if(! $this->method) {
-			return  Eps2Jpeg::response()->error("Not a valid upload established", Eps2Jpeg::BAD_REQUEST);
+			return  Eps2Jpeg::response()->error("Not a valid upload method established", Eps2Jpeg::BAD_REQUEST);
 		}
 
 		if($_REQUEST['save_as'] ) {
@@ -171,8 +288,8 @@ class Eps2JpegRequest {
 		}
 
 		if($_REQUEST['jpg_max_size']) {
-			$this->jpg_size = (int)$_REQUEST['jpg_max_size'];
-			if($this->jpg_size <= 100) {
+			$this->jpg_max_size = (int)$_REQUEST['jpg_max_size'];
+			if($this->jpg_max_size <= 100) {
 				return Eps2Jpeg::response()->error("jpg_max_size must be larger than 100", Eps2Jpeg::PARAM);
 			}
 		}
@@ -185,12 +302,24 @@ class Eps2JpegRequest {
 
 }
 
+
+
+/**
+ * The Eps2Jpeg File upload (multi-part) validator, uses Eps2JpegRequest
+ */
 class Eps2JpegRequest_File extends Eps2JpegRequest {
 
+	/**
+	 * A must... set this method as a 'file' type
+	 */
 	public function __construct() {
 		$this->method = 'file';
 	}
 
+	/**
+	 * Confirms that the file was really uploaded, then validates the rest of the data
+	 * @return mixed an array of information regarding the problem or the result of parent::validate()
+	 */
 	public function validate() {
 		$upload = $_FILES['source'];
 		if(! is_uploaded_file($upload['tmp_name'])) {
@@ -207,10 +336,17 @@ class Eps2JpegRequest_File extends Eps2JpegRequest {
 
 class Eps2JpegRequest_Url extends Eps2JpegRequest {
 
+	/**
+	 * A must... set this method as a 'file' type
+	 */
 	public function __construct() {
 		$this->method = 'url';
 	}
 
+	/**
+	 * Confirms that the url is valid, gets the data from the url, then validates the rest of the data
+	 * @return mixed an array of information regarding the problem or the result of parent::validate()
+	 */
 	public function validate() {
 
 		$url = $_REQUEST['source'];
@@ -229,7 +365,7 @@ class Eps2JpegRequest_Url extends Eps2JpegRequest {
 		$tmp_name = tempnam(Eps2Jpeg::$tmp_dir, 'url-' . $url_parts['host'] . $tmp_file);
 		$tmp_filename = basename($url_parts['path']);
 
-		$this->cleanup_files[] = $tmp_name;
+		Eps2Jpeg::clean()->file($tmp_name);
 
 		$fp = fopen($url, 'r');
 		$rc = file_put_contents($tmp_name, $fp);
@@ -245,24 +381,18 @@ class Eps2JpegRequest_Url extends Eps2JpegRequest {
 }
 
 
+/**
+ * Convert to jpeg 
+ */
 class Eps2JpegConverter {
 
-	private $cleanup_files = array();
-
 	private $ratio = array();
-	private $jpg_size = null;
 	private $input = null;
 
 
 
 	public function __construct(Eps2JpegRequest $input) {
 		$this->input = $input;
-	}
-
-	public function __destruct() {
-		foreach($this->cleanup_files as $file) {
-			if(file_exists($file) ) unlink($file);
-		}
 	}
 
 	private function setSize() {
@@ -305,7 +435,7 @@ class Eps2JpegConverter {
 	}
 
 	public function init() {
-		$jpg_size = $this->input->jpg_size;
+		$jpg_size = $this->input->jpg_max_size;
 
 		if(! ($this->width || $this->height) ) {
 
@@ -344,7 +474,7 @@ class Eps2JpegConverter {
 	public function convert() {
 
 		$pdf_out = tempnam(Eps2Jpeg::$tmp_dir, 'pdf');
-		$this->cleanup_files[] = $pdf_out;
+		Eps2Jpeg::clean()->file($pdf_out);
 
 		$pstill = $this->pstillCommand($this->input->file['tmp_name'], $pdf_out);
 		
@@ -357,7 +487,8 @@ class Eps2JpegConverter {
 		error_log($pstill);
 
 		$jpg_out = tempnam(Eps2Jpeg::$tmp_dir, 'jpg');
-		$this->cleanup_files[] = $jpg_out;
+		Eps2Jpeg::clean()->file($jpg_out);
+
 		$convert = $this->convertCommand($pdf_out, $jpg_out);
 		error_log($convert);
 
