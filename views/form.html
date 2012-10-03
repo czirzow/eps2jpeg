@@ -1,4 +1,4 @@
-
+<h2>/convert/file/</h2>
 <form  
 	action="/convert/file/"
 	enctype="multipart/form-data" 
@@ -17,6 +17,33 @@
 			<td>Eps Width</td>
 			<td><input name="eps_width"></td>
 			<td>(optional) if specificed height must be used as well</td>
+		</tr>
+		<tr>
+			<td>Max Jpeg Size</td>
+			<td><input name="jpg_max_size" value="1000"></td>
+			<td>The size of the jpeg you want</td>
+		</tr>
+		<tr>
+			<td>Auto Name File</td>
+			<td><input type="checkbox" name="auto_name" value="1" checked></td>
+			<td>Will send Content-Dispostion header with filename you sent ending in .jpg</td>
+		</tr>
+		<tr>
+			<td><input type="submit"></td>
+			<td></td>
+		</tr>
+	</table>
+</form>
+
+
+<h2>/convert/url/</h2>
+<form  
+	action="/convert/url/"
+	method="post">
+	<table>
+		<tr>
+			<td>Eps Url</td>
+			<td><input type="text" name="source"></td>
 		</tr>
 		<tr>
 			<td>Max Jpeg Size</td>

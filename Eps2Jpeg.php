@@ -1,5 +1,4 @@
 <?php
-	
 
 class Eps2Jpeg {
 	const MAX_RATIO = 4.0;
@@ -10,7 +9,17 @@ class Eps2Jpeg {
 	public static $tmp_dir = '/tmp/';
 
 	public static function request($type) {
-		return new Eps2JpegRequest($type);
+		switch($type) {
+			case 'file':
+				return new Eps2JpegRequest_File();
+			case 'url':
+				return new Eps2JpegRequest_File();
+
+			case 'post':
+			default:
+				return Eps2JpegResponse::error('Upload method not valid', Eps2JpegResponse::BAD);
+		}
+
 	}
 
 	public static function converter($request) {
@@ -68,6 +77,7 @@ class Eps2Jpeg {
 
 }
 
+
 class Eps2JpegResponse {
 	const BAD       = -2;
 	const UNKNOWN   = -1;
@@ -102,15 +112,16 @@ class Eps2JpegResponse {
 	}
 }
 
+
 class Eps2JpegRequest {
-	private $type = 'file';
+
+	private $type = null;
 
 	public $file = array();
 	public $jpg_size = 1000;
 	private $cleanup_files = array();
 
-	public function __construct($type) {
-		$this->type = $type;
+	public function __construct() {
 	}
 
 	public function __destruct() {
@@ -121,34 +132,10 @@ class Eps2JpegRequest {
 		}
 	}
 
-	private function validateUploadFile() {
-		$upload = $_FILES['source'];
-		if(! is_uploaded_file($upload['tmp_name'])) {
-			return Eps2JpegResponse::error("Not a valid upload", Eps2JpegResponse::BAD);
-		}
-
-		$this->file['tmp_name'] = $upload['tmp_name'];
-		$this->file['name'] = $upload['name'];
-
-		return true;
-	}
-
 	public function validate() {
 
-		switch($this->type) {
-			case 'file':
-				$rc = $this->validateUploadFile();
-				break;
-			case 'url':
-			case 'post':
-				//todo: add support.
-			default:
-				return  Eps2JpegResponse::error("Upload Type Not supported", Eps2JpegResponse::BAD);
-				break;
-		}
-
-		if($rc !== true) {
-			return $rc;
+		if(! $this->method) {
+			return  Eps2JpegResponse::error("Not a valid upload established", Eps2JpegResponse::BAD);
 		}
 
 		if($_REQUEST['save_as'] ) {
@@ -157,6 +144,8 @@ class Eps2JpegRequest {
 			if(! $this->file['name']) {
 				return  Eps2JpegResponse::error("save_as param is required.", Eps2JpegResponse::PARAM);
 			}
+
+			//FIXME: not fully working.
 			if($_REQUEST['auto_name']) {
 				$this->eps_save_base = $this->file['name'];
 			}
@@ -182,7 +171,68 @@ class Eps2JpegRequest {
 
 	}
 
+
 }
+
+class Eps2JpegRequest_File extends Eps2JpegRequest {
+
+	public function __construct() {
+		$this->method = 'file';
+	}
+
+	public function validate() {
+		$upload = $_FILES['source'];
+		if(! is_uploaded_file($upload['tmp_name'])) {
+			return Eps2JpegResponse::error("Not a valid upload", Eps2JpegResponse::BAD);
+		}
+
+		$this->file['tmp_name'] = $upload['tmp_name'];
+		$this->file['name'] = $upload['name'];
+
+		return parent::validate();
+	}
+
+}
+
+class Eps2JpegRequest_Url extends Eps2JpegRequest {
+
+	public function __construct() {
+		$this->method = 'url';
+	}
+
+	public function validate() {
+
+		$url = $_REQUEST['source'];
+		$url_parts = parse_url($url);
+		switch($url_parts['scheme']) {
+			case 'http':
+			case 'https':
+				break;
+			default:
+				return  Eps2JpegResponse::error("Url transport not supported", Eps2JpegResponse::BAD);
+				break;
+		}
+		
+		$tmp_file = preg_replace('/[^A-Z0-9_.-]/i', '-', $url_parts['path']);
+
+		$tmp_name = tempnam(Eps2Jpeg::$tmp_dir, 'url-' . $url_parts['host'] . $tmp_file);
+		$tmp_filename = basename($url_parts['path']);
+
+		$this->cleanup_files[] = $tmp_name;
+
+		$fp = fopen($url, 'r');
+		$rc = file_put_contents($tmp_name, $fp);
+		fclose($fp);
+
+		$this->file['tmp_name'] = $tmp_name;
+		$this->file['name'] = $tmp_filename;
+
+		return parent::validate();
+
+	}
+
+}
+
 
 class Eps2JpegConverter {
 
@@ -214,7 +264,8 @@ class Eps2JpegConverter {
 			error_log(print_r($output, 1));
 			return false;
 		}
-		// 'admin_1326964.eps EPT 823x648 823x648+0+0 DirectClass 2mb'
+
+		// looking (EPT|PS) 823x648 823x648+0+0 DirectClass 2mb'
 		//error_log("check size for" . print_r($output, 1));
 		if(! preg_match('/ (\d+)x(\d+) /', $output[0], $matches)) {
 			error_log("no size match for" . print_r($output, 1));
@@ -223,6 +274,7 @@ class Eps2JpegConverter {
 
 		$this->width = $matches[1];
 		$this->height = $matches[2];
+		error_log("size found {$this->width}x{$this->height}");
 
 		return true;
 		
@@ -235,8 +287,8 @@ class Eps2JpegConverter {
 
 	private function convertCommand($input, $output) {
 		$convert_ratio = $this->ratio['convert'];
-		$convert = Eps2Jpeg::$convert_cmd . "  $convert_ratio -antialias -quality 100 $input $output";
-		$convert = Eps2Jpeg::$convert_cmd . "  -antialias -quality 100 pdf:$input jpg:$output";
+		$convert = Eps2Jpeg::$convert_cmd . "  $convert_ratio -antialias -quality 100 pdf:$input jpg:$output";
+		error_log($convert);
 
 		return $convert;
 	}
@@ -253,6 +305,7 @@ class Eps2JpegConverter {
 		}
 
 		if(! $jpg_size) {
+			error_log('no jpeg size');
 			$this->ratio['pstill'] = '1.0';
 			$this->ratio['convert'] = '';
 		} else {
@@ -260,9 +313,11 @@ class Eps2JpegConverter {
 			if($this->width > $this->height) {
 				$this->ratio['pstill'] = number_format($jpg_size/$this->width, 4);
 				$this->ratio['convert'] = '-resize ' . $jpg_size;
+				error_log("width > height");
 			} else {
 				$this->ratio['pstill'] = number_format($jpg_size/$this->height, 4);
 				$this->ratio['convert'] = '-resize x' . $jpg_size;
+				error_log("width < height");
 			}
 		}
 
