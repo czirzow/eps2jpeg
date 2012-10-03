@@ -173,8 +173,6 @@ class Eps2Jpeg_Cleaner {
 }
 
 
-
-
 /**
  * The Response object for Eps2Jpeg, some work needs to be done to be consistent.
  */
@@ -386,16 +384,34 @@ class Eps2JpegRequest_Url extends Eps2JpegRequest {
  */
 class Eps2JpegConverter {
 
+
+	/**
+	 * keep track of ratios
+	 * @var array
+	 *      'pstill' - the ratio pstill should doe
+	 *      'convert' - the ratio convert should use.
+	 */
 	private $ratio = array();
+
+	/**
+	 * the actual requested vars
+	 *
+	 * @var object Eps2JpegRequest object
+	 */
 	private $input = null;
 
-
-
+	/**
+	 * create a new converter object (eps2jpeg only)
+	 */
 	public function __construct(Eps2JpegRequest $input) {
 		$this->input = $input;
 	}
 
-	private function setSize() {
+	/**
+	 *  Get the size of the image to process
+	 *    uses 
+	 */
+	private function obtainSize() {
 
 		$cmd = Eps2Jpeg::$identify_cmd . ' ' . escapeshellarg($this->input->file['tmp_name']);
 		error_log($cmd);
@@ -421,11 +437,27 @@ class Eps2JpegConverter {
 		
 	}
 
+	/**
+	 * get the pstill command to use
+	 *
+	 * @param $input the file to use from
+	 * @param $output the file to use to
+	 *
+	 * return @string the comman that should be ran.
+	 */
 	private function pstillCommand($input, $output) {
 		$ratio = $this->ratio['pstill'];
 		return Eps2Jpeg::$pstill_cmd . " -M pagescale=$ratio,$ratio  -M defaultall -s -p -m XPDFA=RGB -o $output " . escapeshellarg($input);
 	}
 
+	/**
+	 * get the convert command to use
+	 *
+	 * @param $input the file to use from
+	 * @param $output the file to use to
+	 *
+	 * return @string the comman that should be ran.
+	 */
 	private function convertCommand($input, $output) {
 		$convert_ratio = $this->ratio['convert'];
 		$convert = Eps2Jpeg::$convert_cmd . "  $convert_ratio -antialias -quality 100 pdf:$input jpg:$output";
@@ -434,12 +466,17 @@ class Eps2JpegConverter {
 		return $convert;
 	}
 
+	/**
+	 * Secondary layer of confirming that things are ok, find the  size of the image and ensure the script wont bring the box to its knees.
+	 *
+	 * @return boolean true if able to do things otherwise false, the value of ->error is set if false.
+	 */
 	public function init() {
 		$jpg_size = $this->input->jpg_max_size;
 
 		if(! ($this->width || $this->height) ) {
 
-			if(! $this->setSize() ) {
+			if(! $this->obtainSize() ) {
 				$this->error = 'Could not find size of eps';
 				return false;
 			}
@@ -471,6 +508,11 @@ class Eps2JpegConverter {
 
 	}
 
+	/**
+	 * convert the darn file...
+	 *
+	 * @return mixed  the filename of the converted file otherwse false, with ->error set
+	 */
 	public function convert() {
 
 		$pdf_out = tempnam(Eps2Jpeg::$tmp_dir, 'pdf');
