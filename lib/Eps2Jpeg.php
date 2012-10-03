@@ -1,4 +1,7 @@
 <?php
+/*
+ * everything is all in one file..., no auto loading of any sort
+ */
 
 /* 
  * base/factory class for converter.
@@ -245,8 +248,6 @@ class Eps2Jpeg_Response {
 }
 
 
-
-
 /**
  * The Base Eps2Jpeg Request validator 
  */
@@ -322,7 +323,6 @@ class Eps2JpegRequest {
 }
 
 
-
 /**
  * The Eps2Jpeg File upload (multi-part) validator, uses Eps2JpegRequest
  */
@@ -353,6 +353,9 @@ class Eps2JpegRequest_File extends Eps2JpegRequest {
 
 }
 
+/**
+ * The Eps2Jpeg url validator, uses Eps2JpegRequest
+ */
 class Eps2JpegRequest_Url extends Eps2JpegRequest {
 
 	/**
