@@ -14,16 +14,9 @@ class Eps2Jpeg {
 	const INIT        =  2;
 	const CONVERT     =  3;
 
-	private static $response_codes = array(
-		-2 => array('status' => 400, 'message' => 'Bad Upload'),
-		-1 => array('status' => 400, 'message' => 'Unknown error occured'),
-		 1 => array('status' => 400, 'message' => 'Invalid Parameter'),
-		 2 => array('status' => 400, 'message' => 'Problem with initializing parameters'),
-		 3 => array('status' => 400, 'message' => 'Problem Converting Image'),
-	);
-
-
-
+	/**
+	 * keep only one instance of a response() call
+	 */
 	private static $response;
 
 	public static function request($type) {
@@ -39,6 +32,7 @@ class Eps2Jpeg {
 		}
 
 	}
+
 
 	public static function converter($request) {
 		return new Eps2JpegConverter($request);
@@ -104,6 +98,14 @@ class Eps2Jpeg {
 
 class Eps2Jpeg_Response {
 
+	private static $response_codes = array(
+		Eps2Jpeg::BAD_REQUEST => array('status' => 400, 'message' => 'Bad Upload'),
+		Eps2Jpeg::UNKNOWN     => array('status' => 400, 'message' => 'Unknown error occured'),
+		Eps2Jpeg::PARAM       => array('status' => 400, 'message' => 'Invalid Parameter'),
+		Eps2Jpeg::INIT        => array('status' => 400, 'message' => 'Problem with initializing parameters'),
+		Eps2Jpeg::CONVERT     => array('status' => 400, 'message' => 'Problem Converting Image'),
+	);
+
 	private static $errors = array();
 
 	public static function error($message, $code=-1) {
@@ -129,11 +131,9 @@ class Eps2JpegRequest {
 	private $type = null;
 
 	public $file = array();
-	public $jpg_size = 1000;
+	public $jpg_max_size = 1000;
 	private $cleanup_files = array();
 
-	public function __construct() {
-	}
 
 	public function __destruct() {
 		foreach($this->cleanup_files as $file) {
@@ -173,7 +173,7 @@ class Eps2JpegRequest {
 		if($_REQUEST['jpg_max_size']) {
 			$this->jpg_size = (int)$_REQUEST['jpg_max_size'];
 			if($this->jpg_size <= 100) {
-				return Eps2Jpeg::response()->error("jpg_size must be larger than 100", Eps2Jpeg::PARAM);
+				return Eps2Jpeg::response()->error("jpg_max_size must be larger than 100", Eps2Jpeg::PARAM);
 			}
 		}
 
