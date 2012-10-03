@@ -71,10 +71,12 @@ class Eps2Jpeg {
 
 		$out = array();
 
+		/* this font directory works for conversions */
 		if(! is_dir("/usr/share/X11/fonts/Type1/")) {
 			$out['fail']['pstill'] = 'xorg-x11-fonts-Type1 not installed';
 		} else {
 
+			/* is pstill installed? */
 			if(file_exists(Eps2Jpeg::$pstill_cmd)) {
 				$out['success']['pstill'] = 'installed';
 			} else {
@@ -82,23 +84,27 @@ class Eps2Jpeg {
 			}
 		}
 
+		/* is imagick installed? */
 		if(file_exists(Eps2Jpeg::$convert_cmd)) {
 			$out['success']['convert'] = 'installed';
 		} else {
 			$out['fail']['convert'] = 'not-installed';
 		}
 
+		/* is imagick installed? */
 		if(file_exists(Eps2Jpeg::$identify_cmd)) {
 			$out['success']['identify'] = 'installed';
 		} else {
 			$out['fail']['identify'] = 'not-installed';
 		}
 
+		/* check directory permissions */
 		if(is_dir(Eps2Jpeg::$tmp_dir) ) {
 			if(is_writable(Eps2Jpeg::$tmp_dir)) {
 				$out['success']['tmp_dir'] = 'Ok';
 				$perms = fileperms(Eps2Jpeg::$tmp_dir);
 				if(! ($perms & 0x0200)) { 
+					/* sticky bit t should be set.. */
 					$out['warn']['tmp_dir'] = "Should have bit t set";
 				}
 			} else {
@@ -108,6 +114,7 @@ class Eps2Jpeg {
 			$out['fail']['tmp_dir'] = 'Directory does not exists.';
 		}
 		if(! $out['fail'] || $out['warn']) {
+			/* if this happens, its a go on being able to use this service */
 			$out['message'] = 'Have a good time converting things!';
 		}
 
@@ -150,7 +157,7 @@ class Eps2Jpeg_Cleaner {
 	private $cleanup_files = array();
 
 	/**
-	 * When things are done we do this 
+	 * If and when this object is created, these things are done after script execution.
 	 */
 	public function __destruct() {
 		foreach($this->cleanup_files as $file) {
