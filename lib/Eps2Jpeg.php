@@ -159,12 +159,12 @@ class Eps2Jpeg_Cleaner {
 
 	/**
 	  * singleton.
-		*/
+	  */
 	private function __construct() {}
 
 	/** 
 	  * singleton logic
-		*/
+	  */
 	public static function getInstance() {
 		if(! self::$instance) {
 			self::$instance = new Eps2Jpeg_Cleaner();
