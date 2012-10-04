@@ -14,13 +14,11 @@ $app = new Slim\Slim(array(
 
 $app->get('/', function() use ($app) {
 	$app->render('index.html', array('title' => 'Eps2Jpeg'));
-	}
-);
+});
 
 $app->get('/form/', function() use ($app) {
 	$app->render('form.html');
-	}
-);
+});
 
 
 $app->post('/convert/:type/', function($type)  use ($app) {
