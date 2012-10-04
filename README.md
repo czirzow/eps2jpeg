@@ -47,7 +47,7 @@ Converting an raw post of content [not implemented]:
 
     http://hostname:8000/convert/post/
 
-Converting a url [not implemented]:
+Converting a url [not fully tested]:
 
     http://hostname:8000/convert/url/
 
